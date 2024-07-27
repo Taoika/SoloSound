@@ -1,35 +1,12 @@
 import { Song } from '../model/SongClass'
-
+import { switchMusic } from '../utils/avPlayer'
 import { media } from '@kit.MediaKit';
-import { common } from '@kit.AbilityKit';
-import { BusinessError } from '@kit.BasicServicesKit';
 
 @Component
 export struct PlayList {
-  @State songList: Song[] = [
-    new Song('一个旅人一个旅人一个旅人一个旅人一个旅人一个旅人', '陈奕迅陈奕迅陈奕迅陈奕迅陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-    new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong'),
-  ]
+  @Consume songList: Song[];
+  @Consume playingIndex: number;
+  @Consume playingList: number[];
   scroller: Scroller = new Scroller();
 
   build() {
@@ -37,7 +14,7 @@ export struct PlayList {
       Scroll(this.scroller) {
         Column() {
           ForEach(this.songList, (item: Song, index: number) => {
-            SongItem({ song: item, index: index + 1})
+            SongItem({ nowSong: item, index: index + 1})
           }, (item: Song, index: number) => `${index}`)
         }
         .width('100%')
@@ -46,9 +23,8 @@ export struct PlayList {
       }
       .padding({bottom: 40})
       .scrollable(ScrollDirection.Vertical) // 滚动方向为垂直方向
-      .scrollBar(BarState.On) // 滚动条常驻显示
       .scrollBarColor(Color.Gray) // 滚动条颜色
-      .scrollBarWidth(10) // 滚动条宽度
+      .scrollBarWidth(5) // 滚动条宽度
       .edgeEffect(EdgeEffect.Spring) // 滚动到边沿后回弹
     }
     .height('100%')
@@ -58,8 +34,14 @@ export struct PlayList {
 
 @Component
 struct SongItem  {
-  @Prop song: Song;
-  @Prop index: number;
+  @Prop nowSong: Song;
+  @Prop index: number; // 在歌单列表中的顺序
+  @Consume playingIndex: number;
+  @Consume playingList: number[];
+  @Consume avPlayer: media.AVPlayer | null;
+  @Consume songList: Song[];
+  @Consume isPlay: boolean;
+  @Consume song: Song;
 
   build() {
     Row() {
@@ -67,12 +49,12 @@ struct SongItem  {
         .margin({left: 25, right: 40})
         .fontSize(20)
       Column() {
-        Text(this.song.title)
+        Text(this.nowSong.title)
           .fontSize(18)
           .maxLines(1)
           .textOverflow({overflow: TextOverflow.Ellipsis})
           .width('50%')
-        Text(this.song.singer)
+        Text(this.nowSong.singer)
           .fontSize(15)
           .fontColor('rgba(0, 0, 0, 0.5)')
           .maxLines(1)
@@ -81,6 +63,18 @@ struct SongItem  {
       }
       .alignItems(HorizontalAlign.Start)
     }
-    .margin({bottom: 15})
+    .width('100%')
+    .margin({bottom: 10})
+    .padding({top: 5, bottom: 5})
+    .borderRadius(10)
+    .backgroundColor(`rgba(0, 0, 0, ${this.index === this.playingList[this.playingIndex] + 1 ? 0.1 : 0})`) // 选中歌曲颜色变化
+    .onClick(async () => {
+      const now = this.index - 1
+      this.playingIndex = this.playingList.findIndex((item: number) => item === now) // 此歌曲在播放列表的位置
+      await switchMusic(this.avPlayer!, this.songList[now].url)
+      this.avPlayer?.play()
+      this.isPlay = true;
+      this.song = this.nowSong = this.songList[this.playingList[this.playingIndex]]
+    })
   }
 }

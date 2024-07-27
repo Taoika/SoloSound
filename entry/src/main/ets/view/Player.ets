@@ -4,7 +4,8 @@ import { Song } from '../model/SongClass'
 @Preview
 @Component
 export struct Player {
-  @State song: Song = new Song('一个旅人', '陈奕迅', 'H3M', 'app.media.cover', 'app.aSong')
+  @Consume song: Song;
+
   build() {
     Grid() {
       GridItem() { // 专辑封面
@@ -20,9 +21,18 @@ export struct Player {
             .fontSize(30)
             .fontWeight(700)
             .margin({bottom: 20})
+            .width('100%')
+            .maxLines(1)
+            .textOverflow({overflow: TextOverflow.Ellipsis})
           Text(this.song.singer)
             .fontSize(20)
+            .width('100%')
+            .maxLines(1)
+            .textOverflow({overflow: TextOverflow.Ellipsis})
           Text(this.song.album)
+            .width('100%')
+            .maxLines(1)
+            .textOverflow({overflow: TextOverflow.Ellipsis})
         }
         .width('80%')
       }
