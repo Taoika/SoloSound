@@ -28,6 +28,8 @@ struct Index {
   @Provide avPlayer: media.AVPlayer | null = null;
   @Provide isPlay: boolean = false
   @Provide song: Song = this.songList[this.playingList[this.playingIndex]]
+  @Provide duration: number = 0;
+  @Provide seekDoneTime: number = 0;
   private isInit: Boolean= true;
 
   // build()执行完成后
@@ -78,6 +80,12 @@ struct Index {
           break;
       }
     })
+    this.avPlayer.on('durationUpdate', (duration: number) => {
+        this.duration = duration
+    })
+    this.avPlayer.on('timeUpdate', (seekDoneTime: number) => {    //设置'timeUpdate'事件回调
+      this.seekDoneTime = seekDoneTime
+    });
     setSrc(this.avPlayer, this.songList[this.playingIndex].url)
   }
 

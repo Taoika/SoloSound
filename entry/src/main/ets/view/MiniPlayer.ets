@@ -3,6 +3,16 @@ import { getNextIndex, shuffleArray } from '../utils/getIndex'
 import { media } from '@kit.MediaKit';
 import { switchMusic } from '../utils/avPlayer'
 
+// 毫秒转换为xx:xx格式的时间
+const timeChange = (Milliseconds: number): string => {
+  const seconds = Milliseconds / 1000
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.round(seconds % 60);
+
+  return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+}
+
+@Preview
 @Component
 export struct MiniPlayer {
   @Consume songList: Song[];
@@ -12,16 +22,29 @@ export struct MiniPlayer {
   @Consume isPlay: boolean;
   @Consume playingList: number[];
   @Consume song: Song;
+  @Consume duration: number;
+  @Consume seekDoneTime: number;
 
   build() {
     Column() { // 播放控制 + 进度条
       Column() { // 进度条
+        Progress({ value: this.seekDoneTime, total: this.duration, type: ProgressType.Linear })
+          .height(1.5)
+          .color('rgba(0, 0, 0, 0.7)')
+          .margin({bottom: 10})
+          .onClick(() => {
 
+          })
+        Row() {
+          Text(timeChange(this.seekDoneTime))
+            .fontSize(12)
+          Text(timeChange(this.duration))
+            .fontSize(12)
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.SpaceBetween)
       }
       .width('78%')
-      .border({
-        width: {top: 1},
-      })
       Row() {
         Row() {
           if(this.isRandom) { // 乱序播放
