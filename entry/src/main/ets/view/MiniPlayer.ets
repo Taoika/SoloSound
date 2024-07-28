@@ -36,6 +36,11 @@ export struct MiniPlayer {
             this.seekDoneTime = this.duration * (event.x / Number(event.target.area.width))
             this.avPlayer?.seek(this.seekDoneTime)
           })
+          .onTouch((event: TouchEvent) => {
+            if(event.type !== TouchType.Move || event.touches.length !== 1) return
+            this.seekDoneTime = this.duration * (event.touches[0].x / Number(event.target.area.width))
+            this.avPlayer?.seek(this.seekDoneTime)
+          })
         Row() {
           Text(timeChange(this.seekDoneTime))
             .fontSize(12)
