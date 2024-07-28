@@ -32,8 +32,9 @@ export struct MiniPlayer {
           .height(1.5)
           .color('rgba(0, 0, 0, 0.7)')
           .margin({bottom: 10})
-          .onClick(() => {
-
+          .onClick((event: ClickEvent) => {
+            this.seekDoneTime = this.duration * (event.x / Number(event.target.area.width))
+            this.avPlayer?.seek(this.seekDoneTime)
           })
         Row() {
           Text(timeChange(this.seekDoneTime))
